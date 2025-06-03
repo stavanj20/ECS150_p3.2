@@ -125,7 +125,7 @@ int fs_create(const char *filename)
 	int free_ind = -1;
 	int free_found = 0;
 	for(int i = 0; i < FS_FILE_MAX_COUNT; i++) {
-		/* Check if index is used and has a duplicate filename*/
+		/* Check if index is used and has a duplicate filename */
 		if(root_dir[i].unused[0] != '\0') {
 			if(strcmp(root_dir[i].filename, filename) == 0)
 				return -1;
@@ -180,7 +180,7 @@ int fs_delete(const char *filename)
 	/* Free FAT and deallocate memory */
 	uint16_t data_block = root_dir[file_ind].data_index;
 	uint16_t next = FAT[data_block];
-    while (data_block != FAT_EOC) {
+    while(data_block != FAT_EOC) {
         next = FAT[data_block];
         FAT[data_block] = 0;
         data_block = next;
@@ -188,9 +188,9 @@ int fs_delete(const char *filename)
 	memset(&root_dir[file_ind], 0, sizeof(struct root));
 
 	/* Update disk */
-	if (block_write(sb.root_index, root_dir) < 0)
+	if(block_write(sb.root_index, root_dir) < 0)
         return -1;
-    for (int i = 0; i < sb.fat_blocks; i++) {
+    for(int i = 0; i < sb.fat_blocks; i++) {
         if (block_write(i + 1, ((uint8_t *)FAT) + (i * BLOCK_SIZE)) < 0)
             return -1;
     }
@@ -200,7 +200,18 @@ int fs_delete(const char *filename)
 
 int fs_ls(void)
 {
-	/* TODO: Phase 2 */
+    /* Check if no file system is mounted */
+	if(!mount)
+        return -1;
+
+    /* Find non-empty files and return info */
+    for(int i = 0; i < FS_FILE_MAX_COUNT; i++) {
+        if(root_dir[i].unused[0] != '/0') {
+            printf("file: %s, size: %u, data_blk: %u\n", root_dir[i].filename, root_dir[i].size, root_dir[i].data_index);
+        }
+    }
+
+    return 0;
 }
 
 int fs_open(const char *filename)
